@@ -55,6 +55,6 @@
     "summary": "The first package lands: the Encore build toolchain moves from enrahitu to `@statecrafting/toolchain`, bringing the vendored Encore tree (`vendor/encore/`, MPL-2.0, pinning upstream v1.57.9) and the three per-platform binary packages that carry `encore-runtime.node` and `tsparser-encore`. It is the deepest dependency in the family: both enrahitu and statecraft build with it. Retires enrahitu/008-vendored-encore-toolchain (whose only edge is `vendor/encore/`) and drops `packages/` from enrahitu/018-packaged-chassis.\n",
     "title": "The Encore build toolchain: vendored core, per-platform binaries"
   },
-  "shardHash": "217e52e79fcb99d7f3e181d6bdc438405d0b55116e1132da9630e3f2c9d240b6",
+  "shardHash": "de4659c126ca2c436f8cdb708cd19da6b166f8d60eef0877b9a27972bc956af0",
   "specVersion": "1.1.0"
 }
