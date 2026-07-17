@@ -138,16 +138,17 @@ spec's CI can perform.
 ## 4. Ownership transfer
 
 Per spec 001 section 4, this move transfers edges rather than deleting
-specs:
+specs. Neither exporting spec retires:
 
-- **enrahitu/008-vendored-encore-toolchain retires.** `vendor/encore/` is
-  its sole `establishes` edge, so the spec has nothing left to own. It is
-  marked `status: retired` with a pointer here; it is not deleted, because
-  the design record of why Encore was vendored (rust core + js runtime via
-  napi-rs, no CLI) is the reason this package exists at all.
+- **enrahitu/008-vendored-encore-toolchain drops `vendor/encore/`** and
+  keeps `infra.config.dev.json` and `docker/Dockerfile.base`, which stay in
+  enrahitu. The spec itself stays `approved` and `complete`: it remains the
+  design record of why Encore is vendored at all (rust core + js runtime via
+  napi-rs, no CLI), which is the reason this package exists, and it still
+  owns two live files.
 - **enrahitu/018-packaged-chassis drops `packages/`** and keeps
   `.github/workflows/publish.yml`, which continues to publish enrahitu's
-  own artifacts.
+  own artifacts until spec 003 moves hiqlite-native too.
 
 ## 5. Acceptance
 
@@ -160,7 +161,9 @@ specs:
    pass.
 4. statecraft builds against `@statecrafting/toolchain@0.1.0` and its gates
    pass.
-5. enrahitu/008 is `retired`; enrahitu/018 no longer claims `packages/`.
+5. enrahitu/008 no longer claims `vendor/encore/` and still owns
+   `infra.config.dev.json` and `docker/Dockerfile.base`; enrahitu/018 no
+   longer claims `packages/`. Neither spec is retired or deleted.
 6. **Operator step:** `@enrahitu/toolchain` and its platform packages are
    deprecated on npm with a message naming the new package. Requires an
    `@enrahitu`-scoped token; not performable by this repo's CI.

@@ -134,20 +134,31 @@ Every package moving here is currently owned by a spec that also owns code
 that is **staying put**. The move transfers one edge; it does not delete a
 spec.
 
-| Exporting spec | Edge that moves | Edge that stays | Status |
+| Exporting spec | Edge that moves | Edges that stay | Status |
 |---|---|---|---|
 | statecraft/006-fleet | `addon/fleet-native/` | `backend/fleet/` | complete |
 | statecraft/008-governance-attestation | `addon/governance-native/` | `backend/governance/` | complete |
 | enrahitu/002-in-process-hiqlite | `addon/` | `backend/hiq/` | complete |
 | enrahitu/018-packaged-chassis | `packages/` | `.github/workflows/publish.yml` | complete |
-| enrahitu/008-vendored-encore-toolchain | `vendor/encore/` | (nothing) | complete |
+| enrahitu/008-vendored-encore-toolchain | `vendor/encore/` | `infra.config.dev.json`, `docker/Dockerfile.base` | complete |
 
-Only `enrahitu/008-vendored-encore-toolchain` retires outright, because
-`vendor/encore/` is its sole edge. The other four keep their `backend/`
-and workflow edges and drop only the moving path. statecraft 006 and 008
-in particular are whole service designs (deploy/status/update/backup, and
-the attestation spine the platform calls its differentiator); they are not
-addon specs and must survive this migration intact.
+**No exporting spec retires.** Every one of the five is mixed: it owns a
+path that moves and at least one path that stays, so each drops the moving
+path and keeps the rest. statecraft 006 and 008 in particular are whole
+service designs (deploy/status/update/backup, and the attestation spine the
+platform calls its differentiator); they are not addon specs and must
+survive this migration intact.
+
+An earlier draft of this spec claimed enrahitu/008 retired outright on the
+grounds that `vendor/encore/` was its sole edge. That was false: it also
+establishes `infra.config.dev.json` and `docker/Dockerfile.base`, both of
+which stay. The error came from reading the corpus with an ad-hoc grep for
+lines matching `path:`, which silently skips bare-string `establishes`
+entries that carry no `path:` key. It is recorded here because it is the
+exact failure `.claude/rules/governed-artifact-reads.md` exists to prevent,
+and because "this spec has nothing left to own" is the one conclusion that
+would have deleted a design record. Read ownership with
+`spec-spine registry show`, never by grepping the markdown.
 
 Chancery exports `kernel-addon/` with no edge to drop, because it has no
 spine. Its ungoverned status is why `kernel-native` arrives here with a
