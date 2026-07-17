@@ -1,0 +1,11 @@
+{
+  "package": {
+    "kind": "npm-package",
+    "name": "@statecrafting/toolchain-darwin-arm64",
+    "path": "packages/toolchain-darwin-arm64",
+    "specRef": "002-toolchain",
+    "version": "0.1.0"
+  },
+  "schemaVersion": "1.1.0",
+  "shardHash": "c43ea598318bbd321be2a822a75fe3e00d18356be4f8802835f57c6ba1529c43"
+}
