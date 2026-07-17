@@ -20,12 +20,15 @@ standards_dir = "standards/spec"
 # Rust it builds lives in vendor/encore, which is upstream Encore's own cargo
 # workspace (MPL-2.0) and is not a package we publish. The napi-rs crates
 # arrive with specs 003 through 006.
-standalone_rust_workspaces = []
+standalone_rust_workspaces = [
+  "addon/hiqlite-native",
+]
 standalone_npm_packages    = [
   "packages/toolchain",
   "packages/toolchain-darwin-arm64",
   "packages/toolchain-linux-x64",
   "packages/toolchain-linux-arm64",
+  "addon/hiqlite-native",
 ]
 
 [index]

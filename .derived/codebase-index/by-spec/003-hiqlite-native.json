@@ -1,0 +1,38 @@
+{
+  "mapping": {
+    "dependsOn": [
+      "000-bootstrap",
+      "001-packages-thesis",
+      "002-toolchain"
+    ],
+    "implementingPaths": [
+      {
+        "path": "addon/hiqlite-native",
+        "source": "manifest-metadata"
+      },
+      {
+        "path": "addon/hiqlite-native/",
+        "source": "spec-edge"
+      }
+    ],
+    "resolvedUnits": [
+      {
+        "locations": [
+          {
+            "file": "addon/hiqlite-native/"
+          }
+        ],
+        "ownership": true,
+        "sourceField": "establishes",
+        "unit": {
+          "kind": "directory",
+          "path": "addon/hiqlite-native/"
+        }
+      }
+    ],
+    "specId": "003-hiqlite-native",
+    "specStatus": "approved"
+  },
+  "schemaVersion": "1.1.0",
+  "shardHash": "49b444081d604c515533708a61b1b06d55c9980e4cb862c78bbd1779e2a02e4c"
+}
