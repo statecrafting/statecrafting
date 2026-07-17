@@ -1,0 +1,20 @@
+{
+  "name": "statecrafting",
+  "version": "0.0.0",
+  "private": true,
+  "license": "Apache-2.0",
+  "spec-spine": { "spec": "002-toolchain" },
+  "description": "Build harness for the @statecrafting packages (spec 002). Private and never published: it exists to cargo-build the vendored Encore core out of vendor/encore and link the results into the per-platform toolchain packages. The shipped artifacts are the packages under packages/.",
+  "type": "module",
+  "engines": { "node": ">=24" },
+  "scripts": {
+    "build:runtime": "ENCORE_VERSION=v1.57.9 cargo build --release --manifest-path vendor/encore/Cargo.toml -p encore-js-runtime -p encore-tsparser && node packages/toolchain/scripts/link-runtime.mjs",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests"
+  },
+  "devDependencies": {
+    "@types/node": "^26.0.1",
+    "typescript": "^6.0.3",
+    "vitest": "^4.0.18"
+  }
+}

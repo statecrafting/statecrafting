@@ -14,12 +14,19 @@ allowed = []   # empty: the `kind` field is free-text / disabled
 specs_dir     = "specs"
 derived_dir   = ".derived"
 standards_dir = "standards/spec"
-# This repo is pre-code: the spine lands before the packages do (spec 000).
-# Each package is a standalone napi-rs crate + npm package and is appended to
-# both lists as its own spec lands it (spec 001 section 5, the migration
-# ladder). Keep the two lists in step: every package here is both.
+# Each package is appended as its own spec lands it (spec 001 section 5, the
+# migration ladder). The toolchain (spec 002) is the first to arrive: its meta
+# package plus three per-platform binary packages. It is npm-only here; the
+# Rust it builds lives in vendor/encore, which is upstream Encore's own cargo
+# workspace (MPL-2.0) and is not a package we publish. The napi-rs crates
+# arrive with specs 003 through 006.
 standalone_rust_workspaces = []
-standalone_npm_packages    = []
+standalone_npm_packages    = [
+  "packages/toolchain",
+  "packages/toolchain-darwin-arm64",
+  "packages/toolchain-linux-x64",
+  "packages/toolchain-linux-arm64",
+]
 
 [index]
 # Governance surfaces beyond the always-hashed core. Package manifests are
