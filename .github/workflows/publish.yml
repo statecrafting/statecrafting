@@ -10,7 +10,8 @@
 # publishing is CI-only by construction. One designated leg additionally
 # publishes the meta package.
 #
-# The hiqlite-native legs join this matrix with spec 003.
+# The hiqlite-native legs join this matrix with spec 003, the kernel-native
+# legs with spec 004.
 name: publish
 on:
   push:
@@ -138,6 +139,57 @@ jobs:
         if: matrix.publish_meta
         working-directory: addon/hiqlite-native
         # Idempotent: skip if this exact version is already on npm (spec 003).
+        run: |
+          pkg=$(node -p "require('./package.json').name")
+          ver=$(node -p "require('./package.json').version")
+          if npm view "$pkg@$ver" version 2>/dev/null | grep -q .; then
+            echo "$pkg@$ver already on npm; skipping publish"
+          else
+            npm publish --access public --provenance
+          fi
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      # --- kernel-native addon -> @statecrafting/kernel-native-<triple> ------
+      # (spec 004) napi-rs addon, same shape as hiqlite-native; the `napi`
+      # feature is passed by the package's own build script.
+      - run: npm --prefix addon/kernel-native ci
+      - name: Build kernel-native addon
+        run: npm --prefix addon/kernel-native run build
+      - name: Assemble the kernel addon platform package
+        run: |
+          npm --prefix addon/kernel-native run create-npm-dirs
+          cp addon/kernel-native/kernel-native.${{ matrix.napi_triple }}.node \
+             addon/kernel-native/npm/${{ matrix.napi_triple }}/
+          # npm always ships a LICENSE file even if absent from `files`.
+          cp addon/kernel-native/LICENSE \
+             addon/kernel-native/npm/${{ matrix.napi_triple }}/
+      - name: Publish @statecrafting/kernel-native-${{ matrix.napi_triple }}
+        working-directory: addon/kernel-native/npm/${{ matrix.napi_triple }}
+        # Idempotent: skip if this exact version is already on npm (spec 004).
+        run: |
+          pkg=$(node -p "require('./package.json').name")
+          ver=$(node -p "require('./package.json').version")
+          if npm view "$pkg@$ver" version 2>/dev/null | grep -q .; then
+            echo "$pkg@$ver already on npm; skipping publish"
+          else
+            npm publish --access public --provenance
+          fi
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      # --- kernel-native meta package (one leg only) ------------------------
+      # The platform optionalDependencies are injected at publish time, not
+      # committed, so addon/kernel-native/package-lock.json stays stable
+      # across platforms (mirrors hiqlite-native).
+      - name: Inject platform optionalDependencies into the kernel meta manifest
+        if: matrix.publish_meta
+        run: |
+          node -e "const fs=require('fs');const f='addon/kernel-native/package.json';const p=JSON.parse(fs.readFileSync(f));const v=p.version;p.optionalDependencies={'@statecrafting/kernel-native-darwin-arm64':v,'@statecrafting/kernel-native-linux-x64-gnu':v,'@statecrafting/kernel-native-linux-arm64-gnu':v};fs.writeFileSync(f,JSON.stringify(p,null,2)+'\n')"
+      - name: Publish @statecrafting/kernel-native (meta)
+        if: matrix.publish_meta
+        working-directory: addon/kernel-native
+        # Idempotent: skip if this exact version is already on npm (spec 004).
         run: |
           pkg=$(node -p "require('./package.json').name")
           ver=$(node -p "require('./package.json').version")
