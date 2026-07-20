@@ -1,0 +1,12 @@
+{
+  "package": {
+    "edition": "2024",
+    "kind": "rust-lib",
+    "name": "kernel-native",
+    "path": "addon/kernel-native",
+    "specRef": "004-kernel-native",
+    "version": "0.1.0"
+  },
+  "schemaVersion": "1.1.0",
+  "shardHash": "1106856eb914c650c78da3639557780f66b07c7ab3f7cef8aa9d16be37cb68e1"
+}
