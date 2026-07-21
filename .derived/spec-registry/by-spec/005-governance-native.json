@@ -12,7 +12,7 @@
       }
     ],
     "id": "005-governance-native",
-    "implementation": "in-progress",
+    "implementation": "complete",
     "sectionHeadings": [
       "005: The governance spine as a napi-rs native addon",
       "1. Purpose",
@@ -32,6 +32,6 @@
     "summary": "The fourth package: `@statecrafting/governance-native`, the control plane's governance spine. Canonical JSON, the attest-ledger record chain with Ed25519 anchors, the deterministic action gate over an ordered check registry, and the rolling-window trust scorer, behind a JSON-in / JSON-out napi surface. It arrives by edge transfer from statecraft `addon/governance-native/`, unchanged in behavior and unchanged in license: AGPL-3.0, because no stamped customer app loads it. statecraft spec 008 keeps `backend/governance/` and its whole service design; only this one path moves.\n",
     "title": "The governance spine as a napi-rs native addon"
   },
-  "shardHash": "2bac3e15f7bdae1c7ee2ce4bce35cf523de8d73bf9026a6a564f66ac794832c0",
+  "shardHash": "a3f9fde00664ba34fb604c0f090d21e034673b8e395d667841d37d27c2b58810",
   "specVersion": "1.1.0"
 }

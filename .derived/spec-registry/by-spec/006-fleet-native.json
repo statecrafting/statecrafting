@@ -12,7 +12,7 @@
       }
     ],
     "id": "006-fleet-native",
-    "implementation": "in-progress",
+    "implementation": "complete",
     "sectionHeadings": [
       "006: The fleet placement core as a napi-rs native addon",
       "1. Purpose",
@@ -31,6 +31,6 @@
     "summary": "The fifth and last package of the spec 001 ladder: `@statecrafting/fleet-native`, the control plane's fleet placement core. Native kube-rs construction of the EnRaHiTu placement shape (Namespace, Deployment, PVC, Service, Ingress, NetworkPolicy) plus deploy / status / update / backup / remove, behind a JSON-in / JSON-out async napi surface. It arrives by edge transfer from statecraft `addon/fleet-native/`, unchanged in behavior and unchanged in license: AGPL-3.0, because it is the fleet engine and no stamped app touches it. statecraft spec 006 keeps `backend/fleet/`; only this one path moves.\n",
     "title": "The fleet placement core as a napi-rs native addon"
   },
-  "shardHash": "7e29dc310a1875a62429adcc46e11b92be248bfef149f25c13357c6daca7e529",
+  "shardHash": "ae7acc1153d48039abdd91122d6e7aafedfcee4d60434512c317e1458c477bc3",
   "specVersion": "1.1.0"
 }
