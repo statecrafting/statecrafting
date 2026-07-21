@@ -2,16 +2,15 @@
   "mapping": {
     "dependsOn": [
       "000-bootstrap",
-      "001-packages-thesis",
-      "002-toolchain"
+      "001-packages-thesis"
     ],
     "implementingPaths": [
       {
-        "path": "addon/hiqlite-native",
+        "path": "addon/governance-native",
         "source": "manifest-metadata"
       },
       {
-        "path": "addon/hiqlite-native/",
+        "path": "addon/governance-native/",
         "source": "spec-edge"
       }
     ],
@@ -19,20 +18,20 @@
       {
         "locations": [
           {
-            "file": "addon/hiqlite-native/"
+            "file": "addon/governance-native/"
           }
         ],
         "ownership": true,
         "sourceField": "establishes",
         "unit": {
           "kind": "directory",
-          "path": "addon/hiqlite-native/"
+          "path": "addon/governance-native/"
         }
       }
     ],
-    "specId": "003-hiqlite-native",
+    "specId": "005-governance-native",
     "specStatus": "approved"
   },
   "schemaVersion": "1.1.0",
-  "shardHash": "5b37f7853ad05f490f84406bf855c7c9fd68e05dee039f68e4cca87ff0753a1e"
+  "shardHash": "e91450d0768c1b8ec6ae5167840f6beac32e43b11d9a78b1dab7cd3a99770e96"
 }

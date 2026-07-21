@@ -2,16 +2,15 @@
   "mapping": {
     "dependsOn": [
       "000-bootstrap",
-      "001-packages-thesis",
-      "002-toolchain"
+      "001-packages-thesis"
     ],
     "implementingPaths": [
       {
-        "path": "addon/hiqlite-native",
+        "path": "addon/fleet-native",
         "source": "manifest-metadata"
       },
       {
-        "path": "addon/hiqlite-native/",
+        "path": "addon/fleet-native/",
         "source": "spec-edge"
       }
     ],
@@ -19,20 +18,20 @@
       {
         "locations": [
           {
-            "file": "addon/hiqlite-native/"
+            "file": "addon/fleet-native/"
           }
         ],
         "ownership": true,
         "sourceField": "establishes",
         "unit": {
           "kind": "directory",
-          "path": "addon/hiqlite-native/"
+          "path": "addon/fleet-native/"
         }
       }
     ],
-    "specId": "003-hiqlite-native",
+    "specId": "006-fleet-native",
     "specStatus": "approved"
   },
   "schemaVersion": "1.1.0",
-  "shardHash": "5b37f7853ad05f490f84406bf855c7c9fd68e05dee039f68e4cca87ff0753a1e"
+  "shardHash": "47ccaac65982c95a599685d69f7c009d0c4c5dff4e5f73590f42e5cd1d2bac15"
 }
