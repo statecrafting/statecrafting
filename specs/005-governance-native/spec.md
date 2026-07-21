@@ -3,7 +3,7 @@ id: "005-governance-native"
 title: "The governance spine as a napi-rs native addon"
 status: approved
 created: "2026-07-20"
-implementation: in-progress
+implementation: complete
 depends_on:
   - "000-bootstrap"
   - "001-packages-thesis"
@@ -230,6 +230,13 @@ ownership.
    `addon/governance-native/` is gone, spec 008 has dropped that edge and
    kept `backend/governance/`, and its suite is green. Per spec 001
    section 5 the package is not done until a consumer builds against it.
+   **Satisfied 2026-07-20** (statecrafting/statecraft PR #42): statecraft
+   pins `0.1.0`, `addon/` is gone from that tree, spec 008 establishes
+   `backend/governance/` alone and records the transfer in a dated status
+   note, and its gates are green (typecheck clean, vitest 111 passed / 16
+   skipped, `build:app` against the published package, spine compile 11
+   specs / lint 0/0/0 / index fresh). The vendored gate roster produced
+   the same pinned config hash on both sides.
 4. `scripts/check-licenses.mjs` passes, with this package declared
    AGPL-3.0 and no Apache-2.0 package depending on it.
 5. Spine gates green: compile, index check, lint `--fail-on-warn`.

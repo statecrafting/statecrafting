@@ -3,7 +3,7 @@ id: "006-fleet-native"
 title: "The fleet placement core as a napi-rs native addon"
 status: approved
 created: "2026-07-20"
-implementation: in-progress
+implementation: complete
 depends_on:
   - "000-bootstrap"
   - "001-packages-thesis"
@@ -182,7 +182,15 @@ package (section 5, acceptance item 3).
    `file:./addon/fleet-native`, its in-tree `addon/fleet-native/` is gone,
    spec 006 has dropped that edge and kept `backend/fleet/`, and its suite
    is green. Per spec 001 section 5 the package is not done until a
-   consumer builds against it.
+   consumer builds against it. **Satisfied 2026-07-20**
+   (statecrafting/statecraft PR #42): statecraft pins `0.1.0`, `addon/` is
+   gone from that tree, spec 006 establishes `backend/fleet/` alone and
+   records the transfer in a dated status note that keeps its live-cluster
+   history intact, and its gates are green (typecheck clean, vitest 111
+   passed / 16 skipped, `build:app` against the published package, spine
+   compile 11 specs / lint 0/0/0 / index fresh). The control-plane image
+   also builds and pushes with no Rust toolchain at all, verified by a
+   manual `image.yml` dispatch.
 4. `scripts/check-licenses.mjs` passes, with this package declared
    AGPL-3.0 and no Apache-2.0 package depending on it.
 5. Spine gates green: compile, index check, lint `--fail-on-warn`.
