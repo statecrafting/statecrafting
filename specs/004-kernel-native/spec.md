@@ -3,7 +3,7 @@ id: "004-kernel-native"
 title: "The governance kernel as a napi-rs native addon"
 status: approved
 created: "2026-07-20"
-implementation: in-progress
+implementation: complete
 depends_on:
   - "000-bootstrap"
   - "001-packages-thesis"
@@ -279,7 +279,12 @@ re-base), are chancery's work, out of scope here.
 3. The first consumer (enrahitu's Phase A kernel boot) builds against
    the published package. Per spec 001 section 5 the package is not done
    until a consumer does; that consumer's arrival is enrahitu's spec
-   work, not this repo's.
+   work, not this repo's. **Satisfied 2026-07-20**: enrahitu spec 021
+   (statecrafting/enrahitu PR #23) boots the kernel from its committed
+   app-model.json, adjudicates its Rust-routed operations, and runs its
+   full suite green against the published 0.1.0, on both CoreLedger
+   drivers, including boot-refusal, constraint-denial, and
+   chain-verify tests against this package's napi surface.
 
 ## 6. Out of scope
 
