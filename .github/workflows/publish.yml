@@ -11,7 +11,11 @@
 # publishes the meta package.
 #
 # The hiqlite-native legs join this matrix with spec 003, the kernel-native
-# legs with spec 004.
+# legs with spec 004, and the two AGPL-3.0 control-plane addons
+# (governance-native, fleet-native) with specs 005 and 006. The addons publish
+# under three different licenses; each carries its own LICENSE file, which
+# scripts/check-licenses.mjs verifies against the declared tier on every PR
+# (spec 005 section 3.3).
 name: publish
 on:
   push:
@@ -190,6 +194,102 @@ jobs:
         if: matrix.publish_meta
         working-directory: addon/kernel-native
         # Idempotent: skip if this exact version is already on npm (spec 004).
+        run: |
+          pkg=$(node -p "require('./package.json').name")
+          ver=$(node -p "require('./package.json').version")
+          if npm view "$pkg@$ver" version 2>/dev/null | grep -q .; then
+            echo "$pkg@$ver already on npm; skipping publish"
+          else
+            npm publish --access public --provenance
+          fi
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      # --- governance-native addon -> @statecrafting/governance-native-<triple>
+      # (spec 005) napi-rs addon, same shape as hiqlite-native. AGPL-3.0: a
+      # control-plane internal, so its LICENSE is the AGPL text, not the root's.
+      # The napi bindings are on by default here, so no extra feature flag.
+      - run: npm --prefix addon/governance-native ci
+      - name: Build governance-native addon
+        run: npm --prefix addon/governance-native run build
+      - name: Assemble the governance addon platform package
+        run: |
+          npm --prefix addon/governance-native run create-npm-dirs
+          cp addon/governance-native/governance-native.${{ matrix.napi_triple }}.node \
+             addon/governance-native/npm/${{ matrix.napi_triple }}/
+          # npm always ships a LICENSE file even if absent from `files`.
+          cp addon/governance-native/LICENSE \
+             addon/governance-native/npm/${{ matrix.napi_triple }}/
+      - name: Publish @statecrafting/governance-native-${{ matrix.napi_triple }}
+        working-directory: addon/governance-native/npm/${{ matrix.napi_triple }}
+        # Idempotent: skip if this exact version is already on npm (spec 005).
+        run: |
+          pkg=$(node -p "require('./package.json').name")
+          ver=$(node -p "require('./package.json').version")
+          if npm view "$pkg@$ver" version 2>/dev/null | grep -q .; then
+            echo "$pkg@$ver already on npm; skipping publish"
+          else
+            npm publish --access public --provenance
+          fi
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      # --- governance-native meta package (one leg only) --------------------
+      - name: Inject platform optionalDependencies into the governance meta manifest
+        if: matrix.publish_meta
+        run: |
+          node -e "const fs=require('fs');const f='addon/governance-native/package.json';const p=JSON.parse(fs.readFileSync(f));const v=p.version;p.optionalDependencies={'@statecrafting/governance-native-darwin-arm64':v,'@statecrafting/governance-native-linux-x64-gnu':v,'@statecrafting/governance-native-linux-arm64-gnu':v};fs.writeFileSync(f,JSON.stringify(p,null,2)+'\n')"
+      - name: Publish @statecrafting/governance-native (meta)
+        if: matrix.publish_meta
+        working-directory: addon/governance-native
+        # Idempotent: skip if this exact version is already on npm (spec 005).
+        run: |
+          pkg=$(node -p "require('./package.json').name")
+          ver=$(node -p "require('./package.json').version")
+          if npm view "$pkg@$ver" version 2>/dev/null | grep -q .; then
+            echo "$pkg@$ver already on npm; skipping publish"
+          else
+            npm publish --access public --provenance
+          fi
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      # --- fleet-native addon -> @statecrafting/fleet-native-<triple> --------
+      # (spec 006) napi-rs addon, same shape. AGPL-3.0, like governance-native.
+      - run: npm --prefix addon/fleet-native ci
+      - name: Build fleet-native addon
+        run: npm --prefix addon/fleet-native run build
+      - name: Assemble the fleet addon platform package
+        run: |
+          npm --prefix addon/fleet-native run create-npm-dirs
+          cp addon/fleet-native/fleet-native.${{ matrix.napi_triple }}.node \
+             addon/fleet-native/npm/${{ matrix.napi_triple }}/
+          # npm always ships a LICENSE file even if absent from `files`.
+          cp addon/fleet-native/LICENSE \
+             addon/fleet-native/npm/${{ matrix.napi_triple }}/
+      - name: Publish @statecrafting/fleet-native-${{ matrix.napi_triple }}
+        working-directory: addon/fleet-native/npm/${{ matrix.napi_triple }}
+        # Idempotent: skip if this exact version is already on npm (spec 006).
+        run: |
+          pkg=$(node -p "require('./package.json').name")
+          ver=$(node -p "require('./package.json').version")
+          if npm view "$pkg@$ver" version 2>/dev/null | grep -q .; then
+            echo "$pkg@$ver already on npm; skipping publish"
+          else
+            npm publish --access public --provenance
+          fi
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      # --- fleet-native meta package (one leg only) -------------------------
+      - name: Inject platform optionalDependencies into the fleet meta manifest
+        if: matrix.publish_meta
+        run: |
+          node -e "const fs=require('fs');const f='addon/fleet-native/package.json';const p=JSON.parse(fs.readFileSync(f));const v=p.version;p.optionalDependencies={'@statecrafting/fleet-native-darwin-arm64':v,'@statecrafting/fleet-native-linux-x64-gnu':v,'@statecrafting/fleet-native-linux-arm64-gnu':v};fs.writeFileSync(f,JSON.stringify(p,null,2)+'\n')"
+      - name: Publish @statecrafting/fleet-native (meta)
+        if: matrix.publish_meta
+        working-directory: addon/fleet-native
+        # Idempotent: skip if this exact version is already on npm (spec 006).
         run: |
           pkg=$(node -p "require('./package.json').name")
           ver=$(node -p "require('./package.json').version")

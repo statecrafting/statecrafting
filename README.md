@@ -6,10 +6,14 @@ and chancery all consume.
 
 ## Status
 
-Born governed, pre-code. The spec spine landed before the packages
-(`specs/000-bootstrap/`); `specs/001-packages-thesis/` records what is
-migrating here, why, and in what order. The packages themselves arrive one
-per spec.
+Born governed. The spec spine landed before the packages
+(`specs/000-bootstrap/`); `specs/001-packages-thesis/` records what
+migrated here, why, and in what order.
+
+All five packages of that ladder have now arrived: toolchain (002),
+hiqlite-native (003), kernel-native (004), governance-native (005), and
+fleet-native (006). No exporting spec retired: each dropped the one path
+that moved and kept the code it still owns.
 
 ## Why this repo
 
@@ -39,7 +43,17 @@ shield, and no permissive package may depend on them.
 
 Every package declares its own license in its manifest and carries its own
 LICENSE file. Never infer a package's license from the root or from a
-neighbour.
+neighbour: the three `@statecrafting/toolchain-<platform>` packages are
+MPL-2.0, sitting between an Apache-2.0 meta package and an Apache-2.0 root,
+because they carry the vendored Encore binaries.
+
+This is enforced, not just documented. The root `package.json` declares
+every package's license tier under `statecrafting.licenseTiers`, and
+`npm run check:licenses` refuses when a manifest, a Cargo.toml, or a
+LICENSE file disagrees with its tier, when a package is missing from either
+the tier map or `spec-spine.toml`'s inventory, or when a customer-reaching
+package takes a dependency on an AGPL-3.0 one. It runs on every pull
+request beside the spine gates.
 
 ## Governance
 

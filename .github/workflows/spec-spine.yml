@@ -1,4 +1,6 @@
-# Governance gate (spec 000): compile -> staleness -> lint -> couple.
+# Governance gate (spec 000): compile -> staleness -> lint -> couple, plus the
+# license gate (spec 005 section 3.3), which enforces spec 001 section 3's
+# tiers and the section 3.2 dependency-direction invariant that npm cannot.
 # Mirrors the spec-spine adoption guide's reference workflow.
 name: spec-spine
 on: pull_request
@@ -19,6 +21,10 @@ jobs:
       - run: spec-spine compile
       - run: spec-spine index check
       - run: spec-spine lint --fail-on-warn
+      # No npm install: the license gate reads manifests and LICENSE files off
+      # disk and depends on nothing outside node's standard library.
+      - name: License gate (spec 001 section 3, spec 005 section 3.3)
+        run: node scripts/check-licenses.mjs
       - name: Coupling gate
         env:
           PR_BODY: ${{ github.event.pull_request.body }}

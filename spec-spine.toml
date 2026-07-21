@@ -19,10 +19,19 @@ standards_dir = "standards/spec"
 # package plus three per-platform binary packages. It is npm-only here; the
 # Rust it builds lives in vendor/encore, which is upstream Encore's own cargo
 # workspace (MPL-2.0) and is not a package we publish. The napi-rs crates
-# arrive with specs 003 through 006.
+# arrive with specs 003 through 006, the last two (governance-native,
+# fleet-native) AGPL-3.0.
+#
+# These two lists are the repository's declared package inventory, and
+# scripts/check-licenses.mjs checks them against the licenseTiers map in the
+# root package.json in both directions: a package listed here without a
+# declared license tier fails the gate, and so does a tier row for a package
+# not listed here (spec 005 section 3.3).
 standalone_rust_workspaces = [
   "addon/hiqlite-native",
   "addon/kernel-native",
+  "addon/governance-native",
+  "addon/fleet-native",
 ]
 standalone_npm_packages    = [
   "packages/toolchain",
@@ -31,6 +40,8 @@ standalone_npm_packages    = [
   "packages/toolchain-linux-arm64",
   "addon/hiqlite-native",
   "addon/kernel-native",
+  "addon/governance-native",
+  "addon/fleet-native",
 ]
 
 [index]
