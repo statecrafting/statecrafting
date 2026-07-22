@@ -3,7 +3,7 @@ id: "003-hiqlite-native"
 title: "In-process hiqlite as a napi-rs native addon"
 status: approved
 created: "2026-07-17"
-implementation: pending
+implementation: complete
 depends_on:
   - "000-bootstrap"
   - "001-packages-thesis"
@@ -81,10 +81,16 @@ enrahitu/002-in-process-hiqlite, which keeps its other edge
    at `0.1.0` with provenance, all declaring Apache-2.0 with a LICENSE
    file.
 2. enrahitu builds against `@statecrafting/hiqlite-native@0.1.0` with
-   `addon/` removed from its tree, and its gates pass.
+   `addon/` removed from its tree, and its gates pass. **Satisfied
+   2026-07-22** (statecrafting/enrahitu PR #25): `addon/` is deleted,
+   `backend/hiq/init.ts` imports `@statecrafting/hiqlite-native`, and the
+   `verify` suite passes in CI (the addon crate is a byte-identical move, so
+   the runtime behavior is unchanged).
 3. statecraft builds against `@statecrafting/hiqlite-native@0.1.0` and its
-   gates pass.
+   gates pass. **Satisfied 2026-07-22** (statecrafting/statecraft PR #54).
 4. enrahitu/002 no longer claims `addon/`; it still owns `backend/hiq/`.
+   **Satisfied** (enrahitu PR #25): the `addon/` edge drops from enrahitu spec
+   002-in-process-hiqlite, which keeps `backend/hiq/`.
 5. **Operator step:** deprecate `@enrahitu/hiqlite-native*` on npm with a
    message naming the new package (needs an `@enrahitu`-scoped token).
 
