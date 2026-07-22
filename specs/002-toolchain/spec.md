@@ -174,3 +174,56 @@ specs. Neither exporting spec retires:
   workflow's matrix.
 - Bumping the pinned Encore version. This move preserves `v1.57.9`
   exactly; an upgrade is its own change.
+
+## Amendment (2026-07-21): the app-model extract surface catches up (0.2.0)
+
+When the toolchain was first copied here (0.1.0, 2026-07-17), its only
+surface was the dev/build/bundle drivers. enrahitu then kept improving its
+*local* `packages/toolchain` after the copy was taken: enrahitu spec 020
+(the app-model contract) and spec 021 (kernel consumption) added a TS-tier
+app-model extractor to it. That surface reached npm under neither scope,
+because enrahitu consumes its toolchain through a `file:` link and never
+needed to publish it. The published `@statecrafting/toolchain@0.1.0` was
+therefore stale relative to what enrahitu now depends on, and enrahitu
+could not drop its local copy (Acceptance items 3 to 5) without regressing:
+its `verify.yml` and `check:model` run `enrahitu-extract`, which 0.1.0 does
+not ship.
+
+This amendment lands that catch-up so the published package matches enrahitu's
+source of truth, bumping all four packages to **0.2.0**. It is a pure copy of
+enrahitu's extract surface with one functional adaptation; every shared driver
+file was already byte-identical modulo scope identity.
+
+- **New surface**, added to the meta package: the `enrahitu-extract` bin
+  (`bin/extract.mjs`), the `lib/extract/` subsystem (meta decode, lowering,
+  canonical serialization/hashing, verify, the usage ban-list), and `proto/`.
+  The bin joins the existing `enrahitu-*` set (the historical bin names are
+  kept, spec 002 continuity).
+- **The `proto/` tree** (`encore/parser/{meta,schema}/v1/*.proto`) is copied
+  verbatim from `vendor/encore/proto` at the pinned `v1.57.9` and loaded at
+  runtime by `lib/extract/meta.mjs` to decode `.encore/build/meta`. It is
+  MPL-2.0 file-level content and extends the §3 MPL boundary: MPL schema files
+  sit lawfully inside the Apache-2.0 meta package (MPL-2.0 section 3.3), the
+  same standing as the MPL binaries in the platform packages. The meta's
+  `files` list gains `proto`.
+- **New runtime dependencies** of the meta package: `protobufjs` (meta
+  decode), `ajv` (schema validation in verify), `typescript` (the usage
+  extractor parses the TS tier), and `@statecrafting/kernel-native` (^0.1.0).
+  The extractor closes the cross-language loop through the kernel: it computes
+  `gate.configHash` and the genesis payload via the kernel and refuses to emit
+  a model when the kernel's independently-computed model hash disagrees with
+  the toolchain's. The kernel is Apache-2.0, so the meta stays customer-reaching
+  clean (spec 001 section 3.2); `npm run check:licenses` confirms it.
+- **The one functional adaptation:** the usage ban-list targets
+  `@statecrafting/hiqlite-native` (the post-repoint addon name, spec 003), not
+  enrahitu's `@enrahitu/hiqlite-native`, so a consumer on the new packages is
+  linted against the specifier it actually imports.
+- The repo root's `package.json` gains a `protobufjs` devDependency so the
+  extract subsystem's shipped pure-function tests run under this repo's
+  `npm test` alongside `resolve.test.ts`.
+
+This unblocks the consumer repoint: with `@statecrafting/toolchain@0.2.0`
+published, enrahitu and statecraft can move their toolchain dependency onto it
+(Acceptance items 3 and 4) and enrahitu can delete its local `packages/toolchain`.
+Those consumer greens, not this amendment, are what flip `implementation` to
+complete.

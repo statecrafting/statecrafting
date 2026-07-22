@@ -4,8 +4,8 @@
     "name": "@statecrafting/toolchain-linux-arm64",
     "path": "packages/toolchain-linux-arm64",
     "specRef": "002-toolchain",
-    "version": "0.1.0"
+    "version": "0.2.0"
   },
   "schemaVersion": "1.1.0",
-  "shardHash": "848716df7b3b6875108e62f715251a1a9a44aa86262052059a2444bf05a91d56"
+  "shardHash": "928938c3d00681ba2f00bbb571544c8e7ab77e0c24a3bf8b5cdc5e1bc25c069c"
 }
