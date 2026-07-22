@@ -1,6 +1,6 @@
 {
   "name": "@statecrafting/toolchain",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
@@ -41,8 +41,8 @@
     "typescript": "^6.0.3"
   },
   "optionalDependencies": {
-    "@statecrafting/toolchain-darwin-arm64": "0.2.0",
-    "@statecrafting/toolchain-linux-x64": "0.2.0",
-    "@statecrafting/toolchain-linux-arm64": "0.2.0"
+    "@statecrafting/toolchain-darwin-arm64": "0.3.0",
+    "@statecrafting/toolchain-linux-x64": "0.3.0",
+    "@statecrafting/toolchain-linux-arm64": "0.3.0"
   }
 }

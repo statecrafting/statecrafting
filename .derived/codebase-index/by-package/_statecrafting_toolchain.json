@@ -4,8 +4,8 @@
     "name": "@statecrafting/toolchain",
     "path": "packages/toolchain",
     "specRef": "002-toolchain",
-    "version": "0.2.0"
+    "version": "0.3.0"
   },
   "schemaVersion": "1.1.0",
-  "shardHash": "c91697894810e5c8a5599a447a527d19b9f68ec1071adbff5a3c3a50b26eb824"
+  "shardHash": "576abbf724442aa12abfeb694df4afb4fd4755ed0af27edc32111cbc73fcae5c"
 }

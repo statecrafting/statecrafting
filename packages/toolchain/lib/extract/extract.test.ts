@@ -5,7 +5,11 @@
  * -> seal -> oracle) is exercised by CI's `enrahitu-extract --check` gate
  * over the committed model.
  */
-import { describe, expect, it } from "vitest";
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { dirname, join } from "node:path";
+
+import { afterAll, describe, expect, it } from "vitest";
 
 import {
   canonicalStringify,
@@ -14,7 +18,7 @@ import {
   prettyStringify,
 } from "./canonical.mjs";
 import { accessString, pathString } from "./meta.mjs";
-import { covered } from "./usage.mjs";
+import { covered, observeService, otelObserved } from "./usage.mjs";
 
 describe("canonical serialization (spec 020 §3.5)", () => {
   it("sorts keys recursively with compact separators and a trailing newline", () => {
@@ -60,6 +64,95 @@ describe("ceiling coverage (spec 021 §3.2 verify)", () => {
     expect(covered({ family: "http.egress" }, [{ kind: "http.egress", resource: "*" }])).toBe(
       true,
     );
+  });
+});
+
+describe("the import walk over a fixture tree", () => {
+  const roots: string[] = [];
+  function fixture(files: Record<string, string>): string {
+    const root = mkdtempSync(join(tmpdir(), "extract-walk-"));
+    roots.push(root);
+    for (const [relPath, content] of Object.entries(files)) {
+      const full = join(root, relPath);
+      mkdirSync(dirname(full), { recursive: true });
+      writeFileSync(full, content);
+    }
+    return root;
+  }
+  afterAll(() => {
+    for (const root of roots) rmSync(root, { recursive: true, force: true });
+  });
+
+  const ledgerDriver = { "backend/core/ledger/driver.ts": "export interface LedgerDriver {}\nexport const x = 1;\n" };
+  const obsWiring = {
+    "backend/obs/tracer.ts": "export const tracer = 1;\n",
+    "backend/obs/middleware.ts": 'import { tracer } from "./tracer";\nexport const obsMiddleware = tracer;\n',
+  };
+
+  it("counts a runtime CoreLedger import as a db touch, but not a type-only one", () => {
+    const runtime = fixture({
+      ...ledgerDriver,
+      "backend/svc/api.ts": 'import { x } from "../core/ledger/driver";\nexport const y = x;\n',
+    });
+    expect(observeService(runtime, "backend/svc")).toEqual([
+      { family: "db", via: "backend/svc/api.ts" },
+    ]);
+
+    const typeOnly = fixture({
+      ...ledgerDriver,
+      "backend/svc/api.ts":
+        'import type { LedgerDriver } from "../core/ledger/driver";\nexport const y: LedgerDriver | null = null;\n',
+    });
+    expect(observeService(typeOnly, "backend/svc")).toEqual([]);
+  });
+
+  it("skips type-only elements of a mixed import but keeps the value names", () => {
+    const root = fixture({
+      "backend/kernel/hiq.ts": "export const kvGet = 1;\nexport type KvOpts = {};\n",
+      "backend/svc/api.ts":
+        'import { type KvOpts, kvGet } from "../kernel/hiq";\nexport const y = kvGet;\n',
+    });
+    expect(observeService(root, "backend/svc")).toEqual([
+      { kind: "kv.get", resource: "cache", via: "backend/svc/api.ts" },
+    ]);
+  });
+
+  it("observes otel when a service outside backend/obs/ reaches the tracer anchor", () => {
+    const wired = fixture({
+      ...obsWiring,
+      "backend/svc/encore.service.ts":
+        'import { obsMiddleware } from "../obs/middleware";\nexport const s = obsMiddleware;\n',
+    });
+    expect(otelObserved(wired, ["backend/svc", "backend/obs"])).toBe(true);
+  });
+
+  it("does not observe otel from backend/obs/ referencing itself or from no wiring", () => {
+    const selfOnly = fixture({
+      ...obsWiring,
+      "backend/svc/encore.service.ts": "export const s = 1;\n",
+    });
+    expect(otelObserved(selfOnly, ["backend/svc", "backend/obs"])).toBe(false);
+
+    const unwired = fixture({
+      "backend/svc/encore.service.ts": "export const s = 1;\n",
+    });
+    expect(otelObserved(unwired, ["backend/svc"])).toBe(false);
+  });
+
+  it("does not observe otel through the enforcement plane or a type-only edge", () => {
+    const throughKernel = fixture({
+      ...obsWiring,
+      "backend/kernel/boot.ts": 'import { tracer } from "../obs/tracer";\nexport const b = tracer;\n',
+      "backend/svc/api.ts": 'import { b } from "../kernel/boot";\nexport const y = b;\n',
+    });
+    expect(otelObserved(throughKernel, ["backend/svc", "backend/obs"])).toBe(false);
+
+    const typeOnly = fixture({
+      ...obsWiring,
+      "backend/svc/api.ts":
+        'import type { tracer } from "../obs/tracer";\nexport const y: typeof tracer | null = null;\n',
+    });
+    expect(otelObserved(typeOnly, ["backend/svc", "backend/obs"])).toBe(false);
   });
 });
 

@@ -2,7 +2,10 @@
  * Lower encore meta + the capability manifest into the app-model document
  * (spec 020 §3.2, spec 021 §3.2). Services and endpoints come from meta;
  * the declared ceiling (capabilities, resources, trust, gate, ledger,
- * observability, auth) comes from app-manifest.json. Every array is
+ * observability, auth) comes from app-manifest.json, except
+ * observability.otel, which is observed from the wiring (enrahitu spec
+ * 022): the verify step separately requires the manifest declaration to
+ * agree with the observation. Every array is
  * emitted sorted per the schema's x-sortKey annotations; every number is
  * an integer. The document leaves here unsealed: gate.configHash and
  * integrity are pinned by the seal step.
@@ -50,8 +53,10 @@ function sortedConstraints(constraints) {
  * @param {object} args.manifest parsed app-manifest.json
  * @param {{revision: string, uncommittedChanges: boolean}} args.source
  * @param {string} args.producerVersion the toolchain package version
+ * @param {boolean} args.otelObserved whether the import walk found a
+ *   service wired to the OTel tracer anchor (usage.mjs otelObserved)
  */
-export function lowerModel({ meta, manifest, source, producerVersion }) {
+export function lowerModel({ meta, manifest, source, producerVersion, otelObserved }) {
   const services = [...meta.svcs]
     .sort(byKey("name"))
     .map((svc) => {
@@ -119,7 +124,7 @@ export function lowerModel({ meta, manifest, source, producerVersion }) {
       configHash: "unpinned",
     },
     ledger: manifest.ledger,
-    observability: manifest.observability,
+    observability: { ...(manifest.observability ?? {}), otel: otelObserved === true },
     integrity: { algorithm: "sha256-canonical-keysort-v1", hash: "unsealed" },
   };
   if (manifest.auth) model.auth = manifest.auth;
