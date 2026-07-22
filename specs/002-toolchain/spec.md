@@ -3,7 +3,7 @@ id: "002-toolchain"
 title: "The Encore build toolchain: vendored core, per-platform binaries"
 status: approved
 created: "2026-07-17"
-implementation: pending
+implementation: complete
 depends_on:
   - "000-bootstrap"
   - "001-packages-thesis"
@@ -156,14 +156,22 @@ specs. Neither exporting spec retires:
    at `0.1.0` with provenance.
 2. The platform packages declare MPL-2.0; the meta package declares
    Apache-2.0.
-3. enrahitu builds against `@statecrafting/toolchain@0.1.0` from npm, with
+3. enrahitu builds against `@statecrafting/toolchain` from npm, with
    `vendor/encore/` and `packages/` removed from its tree, and its gates
-   pass.
-4. statecraft builds against `@statecrafting/toolchain@0.1.0` and its gates
-   pass.
+   pass. **Satisfied 2026-07-22** against `0.2.0` (statecrafting/enrahitu PR
+   #25): the three vendored trees are deleted, `encore.dev` resolves from the
+   registry, and `npm ci` + `build:app` + `check:model` + `typecheck` + the
+   full test suite pass in CI (`verify` green).
+4. statecraft builds against `@statecrafting/toolchain` and its gates
+   pass. **Satisfied 2026-07-22** against `0.2.0` (statecrafting/statecraft
+   PR #54): the control plane builds and tests green on the repointed scope.
 5. enrahitu/008 no longer claims `vendor/encore/` and still owns
    `infra.config.dev.json` and `docker/Dockerfile.base`; enrahitu/018 no
    longer claims `packages/`. Neither spec is retired or deleted.
+   **Satisfied** (enrahitu PR #25): 008 drops `vendor/encore/` and keeps the
+   two files; 018 drops `packages/` and `.github/workflows/publish.yml` (which
+   was removed with the packages) and becomes an edgeless design record; 002
+   drops `addon/`. No spec retired.
 6. **Operator step:** `@enrahitu/toolchain` and its platform packages are
    deprecated on npm with a message naming the new package. Requires an
    `@enrahitu`-scoped token; not performable by this repo's CI.
