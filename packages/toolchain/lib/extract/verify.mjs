@@ -162,6 +162,23 @@ function secretsViolations(model, meta) {
   return out;
 }
 
+/**
+ * The manifest's observability.otel declaration must agree with what the
+ * wiring observation put in the model (enrahitu spec 022): a declaration
+ * of true without a wired tracer, or wiring without the declaration, is
+ * a ceiling/truth mismatch either way.
+ */
+function observabilityViolations(model, manifest) {
+  const declared = manifest.observability?.otel ?? false;
+  const observed = model.observability?.otel ?? false;
+  if (declared === observed) return [];
+  return [
+    `app-manifest.json declares observability.otel: ${declared} but the import walk observes ` +
+      `${observed} (tracer anchor backend/obs/tracer.ts ${observed ? "reached" : "not reached"} ` +
+      `from a service outside backend/obs/); align the manifest with the wiring`,
+  ];
+}
+
 function usageViolations(model, manifest, meta, repoRoot) {
   const out = [];
   const catalog = new Map(model.capabilities.map((c) => [c.id, c]));
@@ -197,6 +214,7 @@ export function verifyModel({ model, manifest, meta, repoRoot }) {
     ...crossRefViolations(model),
     ...serviceSetViolations(model, manifest, meta),
     ...secretsViolations(model, meta),
+    ...observabilityViolations(model, manifest),
     ...usageViolations(model, manifest, meta, repoRoot),
     ...banViolations(repoRoot),
   ];

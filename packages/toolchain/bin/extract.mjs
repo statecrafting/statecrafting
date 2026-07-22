@@ -22,6 +22,7 @@ import {
 } from "../lib/extract/canonical.mjs";
 import { decodeMeta } from "../lib/extract/meta.mjs";
 import { lowerModel } from "../lib/extract/lower.mjs";
+import { otelObserved } from "../lib/extract/usage.mjs";
 import { verifyModel, VerifyError } from "../lib/extract/verify.mjs";
 
 const require = createRequire(import.meta.url);
@@ -68,7 +69,16 @@ async function recompute() {
   const meta = await decodeMeta(metaPath);
   const producerVersion = require("../package.json").version;
 
-  const model = lowerModel({ meta, manifest, source: gitSource(), producerVersion });
+  const model = lowerModel({
+    meta,
+    manifest,
+    source: gitSource(),
+    producerVersion,
+    otelObserved: otelObserved(
+      repoRoot,
+      meta.svcs.map((svc) => svc.relPath),
+    ),
+  });
 
   // Seal: pin the gate roster hash and the integrity hash, then verify the
   // sealed document, then close the cross-language loop with the kernel.

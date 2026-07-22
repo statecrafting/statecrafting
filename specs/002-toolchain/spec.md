@@ -235,3 +235,48 @@ published, enrahitu and statecraft can move their toolchain dependency onto it
 (Acceptance items 3 and 4) and enrahitu can delete its local `packages/toolchain`.
 Those consumer greens, not this amendment, are what flip `implementation` to
 complete.
+
+## Amendment (2026-07-22): observability.otel is observed, not declared (0.3.0)
+
+enrahitu spec 022 (the observability contract) requires the extracted model's
+`observability.otel` to flip to `true` "because the extractor observes the
+wiring, not because anyone edited JSON". Until now the extract surface lowered
+`observability` as a straight pass-through of `app-manifest.json`. This
+amendment moves `otel` from the declared side to the observed side, bumping
+all four packages to **0.3.0** (lockstep, per the 0.2.0 precedent; the
+platform carriers change version only).
+
+- **The wiring anchor.** `lib/extract/usage.mjs` gains `OBS_TRACER =
+  "backend/obs/tracer.ts"` alongside the existing governed-facade constants,
+  and an exported `otelObserved(repoRoot, serviceRelPaths)` walk: `otel` is
+  observed `true` iff at least one service outside `backend/obs/` transitively
+  imports the tracer anchor, under the same traversal rules as
+  `observeService` (relative imports only, terminal at the governed facades,
+  never entering `backend/kernel/` or `backend/core/ledger/`). The obs service
+  referencing its own tracer proves nothing; reach from an instrumented
+  sibling service is the wiring being observed. The observation is app-level
+  by design: it claims the app runs a tracer, not that every service is
+  instrumented.
+- **Lowering.** `lowerModel` takes the observation as an input and emits
+  `observability: { ...manifest.observability, otel: <observed> }`;
+  `metricsPath` (and any future member) still joins from the manifest.
+- **A new verify rule.** `observabilityViolations`: the manifest's declared
+  `observability.otel` must equal the observed value, or extraction fails
+  with exit 1 naming the disagreement. The manifest stays an honest
+  declaration; the model stays observed truth; a hand-flip of either side
+  alone cannot pass.
+- **Type-only imports are erased.** `importEdges` now skips whole-clause
+  `import type` declarations, type-only named elements, and type-only
+  re-exports: they vanish at runtime, so they are neither a faculty touch
+  nor a wiring edge. Mixed imports keep their value names, and an import
+  whose named list is emptied by the filter keeps its edge (a side-effect
+  import survives some emitters). This also keeps a consumer's
+  `import type { LedgerDriver }` from `backend/core/ledger/driver` out of
+  the db-family observation.
+- Determinism holds: the observation is a pure function of the source tree
+  (enrahitu spec 020 §3.5), no env or wall-clock input.
+
+The consumer flip rides enrahitu spec 022: enrahitu bumps its toolchain
+dependency to `^0.3.0`, wires `backend/obs/`, flips its manifest declaration,
+and re-extracts; the committed model then records `otel: true` under the
+staleness gate.

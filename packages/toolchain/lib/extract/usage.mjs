@@ -21,6 +21,13 @@ const HIQ_FACADE = "backend/kernel/hiq.ts";
 const SECRETS_MODULE = "backend/lib/secrets.ts";
 const EGRESS_MODULE = "backend/kernel/egress.ts";
 
+/**
+ * The OTel wiring anchor (enrahitu spec 022): the file that constructs the
+ * app's tracer provider. A service that transitively imports it is
+ * instrumented; the model's observability.otel derives from that reach.
+ */
+const OBS_TRACER = "backend/obs/tracer.ts";
+
 const HIQ_KINDS = {
   kvGet: { kind: "kv.get", resource: "cache" },
   kvPut: { kind: "kv.put", resource: "cache" },
@@ -64,10 +71,16 @@ function importEdges(file) {
     let specifier;
     const named = [];
     if (ts.isImportDeclaration(stmt) && ts.isStringLiteral(stmt.moduleSpecifier)) {
+      // Type-only imports are erased at runtime: not a faculty touch and
+      // not a wiring edge.
+      if (stmt.importClause?.isTypeOnly) continue;
       specifier = stmt.moduleSpecifier.text;
       const bindings = stmt.importClause?.namedBindings;
       if (bindings && ts.isNamedImports(bindings)) {
-        for (const el of bindings.elements) named.push((el.propertyName ?? el.name).text);
+        for (const el of bindings.elements) {
+          if (el.isTypeOnly) continue;
+          named.push((el.propertyName ?? el.name).text);
+        }
       } else if (bindings && ts.isNamespaceImport(bindings)) {
         // A namespace import is opaque to per-name attribution: observe it
         // conservatively as touching everything the target module maps.
@@ -75,9 +88,13 @@ function importEdges(file) {
       }
       if (stmt.importClause?.name) named.push("default");
     } else if (ts.isExportDeclaration(stmt) && stmt.moduleSpecifier && ts.isStringLiteral(stmt.moduleSpecifier)) {
+      if (stmt.isTypeOnly) continue;
       specifier = stmt.moduleSpecifier.text;
       if (stmt.exportClause && ts.isNamedExports(stmt.exportClause)) {
-        for (const el of stmt.exportClause.elements) named.push((el.propertyName ?? el.name).text);
+        for (const el of stmt.exportClause.elements) {
+          if (el.isTypeOnly) continue;
+          named.push((el.propertyName ?? el.name).text);
+        }
       }
     }
     if (specifier) edges.push({ specifier, named });
@@ -150,6 +167,41 @@ export function observeService(repoRoot, serviceDir) {
     }
   }
   return touches;
+}
+
+/**
+ * Does any service outside backend/obs/ transitively import the OTel
+ * tracer anchor (enrahitu spec 022)? The walk mirrors observeService's
+ * traversal rules: relative imports only, terminal at the governed
+ * facades, never entering backend/kernel/ or backend/core/ledger/. The
+ * obs service itself referencing its own tracer proves nothing; reach
+ * from an instrumented sibling service is the wiring being observed.
+ */
+export function otelObserved(repoRoot, serviceRelPaths) {
+  for (const serviceDir of serviceRelPaths) {
+    const dirRel = serviceDir.replace(/\/+$/, "");
+    if (dirRel === "backend/obs" || dirRel.startsWith("backend/obs/")) continue;
+    const seen = new Set();
+    const queue = listTsFiles(join(repoRoot, serviceDir));
+    while (queue.length > 0) {
+      const file = queue.pop();
+      if (seen.has(file)) continue;
+      seen.add(file);
+      for (const edge of importEdges(file)) {
+        if (!edge.specifier.startsWith(".")) continue;
+        const target = resolveRelative(file, edge.specifier);
+        if (!target) continue;
+        const targetRel = rel(repoRoot, target);
+        if (targetRel === OBS_TRACER) return true;
+        if (!targetRel.startsWith("backend/")) continue;
+        if (targetRel === HIQ_FACADE || targetRel === SECRETS_MODULE || targetRel === EGRESS_MODULE) continue;
+        if (targetRel.startsWith("backend/kernel/")) continue;
+        if (targetRel.startsWith("backend/core/ledger/")) continue;
+        queue.push(target);
+      }
+    }
+  }
+  return false;
 }
 
 /** Is `touch` covered by one of `grants` (the service's declared ceiling)? */
