@@ -4,8 +4,8 @@
     "name": "@statecrafting/toolchain-darwin-arm64",
     "path": "packages/toolchain-darwin-arm64",
     "specRef": "002-toolchain",
-    "version": "0.1.0"
+    "version": "0.2.0"
   },
   "schemaVersion": "1.1.0",
-  "shardHash": "20232461d137e0cdd302fa5113fd834ec3da116ddd05211a4758ee0a23c170ff"
+  "shardHash": "a68cc859dcef5808498be4287563520dc68b5f2c625da75574d99856bd4e9ceb"
 }

@@ -48,13 +48,14 @@
       "The old names",
       "4. Ownership transfer",
       "5. Acceptance",
-      "6. Out of scope"
+      "6. Out of scope",
+      "Amendment (2026-07-21): the app-model extract surface catches up (0.2.0)"
     ],
     "specPath": "specs/002-toolchain/spec.md",
     "status": "approved",
     "summary": "The first package lands: the Encore build toolchain moves from enrahitu to `@statecrafting/toolchain`, bringing the vendored Encore tree (`vendor/encore/`, MPL-2.0, pinning upstream v1.57.9) and the three per-platform binary packages that carry `encore-runtime.node` and `tsparser-encore`. It is the deepest dependency in the family: both enrahitu and statecraft build with it. Retires enrahitu/008-vendored-encore-toolchain (whose only edge is `vendor/encore/`) and drops `packages/` from enrahitu/018-packaged-chassis.\n",
     "title": "The Encore build toolchain: vendored core, per-platform binaries"
   },
-  "shardHash": "de4659c126ca2c436f8cdb708cd19da6b166f8d60eef0877b9a27972bc956af0",
+  "shardHash": "d612e3a3abfb21511bf64833bd0f34eab0ccbf1a4cc55112b026dcd223159ea3",
   "specVersion": "1.1.0"
 }

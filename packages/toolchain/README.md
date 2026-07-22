@@ -8,7 +8,8 @@ binaries they need from per-platform companion packages:
 
 - **Drivers** (bins): `enrahitu-build` (parse + compile + bundle, no `encore`
   CLI), `enrahitu-dev` (build then run the combined bundle under plain node),
-  `enrahitu-toolchain` (version report).
+  `enrahitu-extract` (produce and verify the TS-tier app-model from the build
+  meta), `enrahitu-toolchain` (version report).
 - **Native binaries**, delivered as `optionalDependencies` with `os`/`cpu`
   guards (the esbuild/napi-rs pattern): `@statecrafting/toolchain-darwin-arm64`,
   `@statecrafting/toolchain-linux-x64`, `@statecrafting/toolchain-linux-arm64`. Each
