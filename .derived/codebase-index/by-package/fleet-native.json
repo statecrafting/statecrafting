@@ -5,8 +5,8 @@
     "name": "fleet-native",
     "path": "addon/fleet-native",
     "specRef": "006-fleet-native",
-    "version": "0.1.0"
+    "version": "0.2.0"
   },
   "schemaVersion": "1.1.0",
-  "shardHash": "08fab9977a1106d0ec273d9a60936950e03df9361286d8f77e14248101979bf8"
+  "shardHash": "dccba8f2024bd1ee169362f5f2d79c09f37376be17bc3e1981b664cafc8913ab"
 }

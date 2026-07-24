@@ -217,9 +217,10 @@ pub async fn backup_app(
     })
 }
 
-/// Delete an app's per-app resources. The tenant Namespace and the baseline
-/// NetworkPolicies are shared across the tenant's apps, so they are left in
-/// place (a last-app namespace GC is a follow-up).
+/// Delete an app's per-app resources, including its ingress-allow
+/// NetworkPolicy. The tenant Namespace and the namespace-scoped baseline
+/// policies (default-deny, egress) are shared across the tenant's apps, so
+/// they are left in place (a last-app namespace GC is a follow-up).
 pub async fn remove_app(name: &str, namespace: &str) -> OpResult<RemoveResult> {
     if !naming::is_valid_namespace(namespace) {
         return Err(format!("refusing reserved or malformed namespace {namespace}"));
@@ -228,6 +229,9 @@ pub async fn remove_app(name: &str, namespace: &str) -> OpResult<RemoveResult> {
 
     let deploy_api: Api<Deployment> = Api::namespaced(client.clone(), namespace);
     delete_ignore_404(&deploy_api, name, "deployment").await?;
+
+    let np_api: Api<NetworkPolicy> = Api::namespaced(client.clone(), namespace);
+    delete_ignore_404(&np_api, &naming::ingress_policy_name(name), "networkpolicy").await?;
 
     let svc_api: Api<Service> = Api::namespaced(client.clone(), namespace);
     delete_ignore_404(&svc_api, name, "service").await?;
