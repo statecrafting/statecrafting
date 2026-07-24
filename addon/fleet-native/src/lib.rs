@@ -1,9 +1,11 @@
 //! fleet-native: the control plane's fleet placement core as a napi-rs addon.
 //!
 //! Native `kube-rs` construction of the EnRaHiTu placement shape (statecraft spec 006 §3):
-//! one Namespace per tenant, and per app one PVC, Deployment (single replica,
-//! Recreate), ClusterIP Service, nginx Ingress (cert-manager DNS-01 TLS), and a
-//! baseline NetworkPolicy set. The Encore.ts `fleet/` service drives it as
+//! one Namespace per tenant with namespace-scoped deny-all + egress
+//! NetworkPolicies, and per app one PVC, Deployment (single replica,
+//! Recreate), ClusterIP Service, nginx Ingress (cert-manager DNS-01 TLS), and
+//! a port-pinned ingress-allow NetworkPolicy. The Encore.ts `fleet/` service
+//! drives it as
 //! plain-JSON-in / plain-JSON-out async functions: `placeApp`, `appStatus`,
 //! `updateApp`, `backupApp`, `removeApp`.
 //!

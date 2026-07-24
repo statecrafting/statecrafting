@@ -279,10 +279,15 @@ fn np_meta(name: &str, ns: &str) -> ObjectMeta {
     }
 }
 
-/// Baseline per-namespace NetworkPolicies (statecraft spec 006 §3): default-deny, allow the
-/// ingress controller in, and allow DNS + outbound HTTPS out (the app reaches
-/// its managed database and upstreams over 443). Namespace-scoped
-/// (`podSelector: {}`), so one set covers every app in a tenant namespace.
+/// NetworkPolicies for a placement (statecraft spec 006 §3): default-deny and
+/// allow DNS + outbound HTTPS out (the app reaches its managed database and
+/// upstreams over 443) are namespace-scoped (`podSelector: {}`), one set per
+/// tenant namespace. The ingress allow is **per app**: it pins the app's port,
+/// so a namespace-wide policy would freeze the first app's port and silently
+/// 502 every later app on a different port (kubelet probes bypass
+/// NetworkPolicy, so the rollout still reads Ready). Its podSelector matches
+/// only the app's pods and its name carries the app, so per-app policies
+/// coexist and each opens exactly its own port (spec 006 amendment, 0.2.0).
 pub fn network_policies(spec: &DeploySpec) -> Vec<NetworkPolicy> {
     let ns = &spec.namespace;
 
@@ -304,10 +309,16 @@ pub fn network_policies(spec: &DeploySpec) -> Vec<NetworkPolicy> {
     );
     ingress_ns_selector.match_labels = Some(ns_match);
 
+    let mut allow_ingress_meta = np_meta(&naming::ingress_policy_name(&spec.name), ns);
+    allow_ingress_meta.labels = Some(naming::labels(&spec.name));
+
     let allow_ingress = NetworkPolicy {
-        metadata: np_meta("fleet-allow-ingress-nginx", ns),
+        metadata: allow_ingress_meta,
         spec: Some(NetworkPolicySpec {
-            pod_selector: Some(LabelSelector::default()),
+            pod_selector: Some(LabelSelector {
+                match_labels: Some(naming::selector_labels(&spec.name)),
+                ..Default::default()
+            }),
             policy_types: Some(vec!["Ingress".to_string()]),
             ingress: Some(vec![NetworkPolicyIngressRule {
                 from: Some(vec![NetworkPolicyPeer {
@@ -622,6 +633,10 @@ mod tests {
 
         let allow_in = json(&policies[1]);
         assert_eq!(
+            allow_in.pointer("/metadata/name").unwrap(),
+            "fleet-allow-ingress-acme"
+        );
+        assert_eq!(
             allow_in
                 .pointer("/spec/ingress/0/from/0/namespaceSelector/matchLabels/kubernetes.io~1metadata.name")
                 .unwrap(),
@@ -631,11 +646,43 @@ mod tests {
             allow_in.pointer("/spec/ingress/0/ports/0/port").unwrap(),
             4000
         );
+        // The allow targets only this app's pods, not the whole namespace.
+        assert_eq!(
+            allow_in
+                .pointer("/spec/podSelector/matchLabels/app.kubernetes.io~1instance")
+                .unwrap(),
+            "acme"
+        );
 
         let allow_out = json(&policies[2]);
         assert_eq!(
             allow_out.pointer("/spec/policyTypes/0").unwrap(),
             "Egress"
+        );
+    }
+
+    #[test]
+    fn ingress_allow_is_per_app_so_two_ports_coexist() {
+        // Regression for the in-pod two-port E2E defect: a namespace-wide
+        // ingress allow pinned the first app's port, so a second app on
+        // another port rolled out Ready but 502'd from the edge.
+        let first = spec();
+        let mut second = spec();
+        second.name = "cell".to_string();
+        second.port = 8080;
+
+        let a = json(&network_policies(&first)[1]);
+        let b = json(&network_policies(&second)[1]);
+        // Distinct names: placing the second app cannot 409 into the first
+        // app's policy and inherit its port.
+        assert_eq!(a.pointer("/metadata/name").unwrap(), "fleet-allow-ingress-acme");
+        assert_eq!(b.pointer("/metadata/name").unwrap(), "fleet-allow-ingress-cell");
+        assert_eq!(a.pointer("/spec/ingress/0/ports/0/port").unwrap(), 4000);
+        assert_eq!(b.pointer("/spec/ingress/0/ports/0/port").unwrap(), 8080);
+        assert_eq!(
+            b.pointer("/spec/podSelector/matchLabels/app.kubernetes.io~1instance")
+                .unwrap(),
+            "cell"
         );
     }
 

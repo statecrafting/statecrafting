@@ -83,6 +83,13 @@ pub fn pvc_name(app: &str) -> String {
     format!("{app}-data")
 }
 
+/// The per-app ingress-allow NetworkPolicy. Named per app because the policy
+/// pins the app's port: one namespace-wide policy would freeze the first
+/// app's port for every later app in the tenant namespace.
+pub fn ingress_policy_name(app: &str) -> String {
+    format!("fleet-allow-ingress-{app}")
+}
+
 pub fn tls_secret_name(app: &str) -> String {
     format!("{app}-tls")
 }
@@ -123,6 +130,7 @@ mod tests {
     fn derived_names_are_deterministic() {
         assert_eq!(pvc_name("acme"), "acme-data");
         assert_eq!(tls_secret_name("acme"), "acme-tls");
+        assert_eq!(ingress_policy_name("acme"), "fleet-allow-ingress-acme");
         assert_eq!(backup_job_name("acme", "20260715t120000"), "acme-backup-20260715t120000");
     }
 }

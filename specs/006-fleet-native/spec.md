@@ -231,3 +231,49 @@ nothing in npm enforces it; something does now.
 No exporting spec retired, which was spec 001 section 4's requirement and
 the failure mode it recorded a live example of. All five kept the code
 they still own.
+
+## Amendment (2026-07-23): the ingress allow becomes per-app (0.2.0)
+
+The transfer shipped the NetworkPolicy set exactly as statecraft spec 006
+landed it: three namespace-scoped policies (`podSelector: {}`), applied
+create-or-tolerate-409. One of them, `fleet-allow-ingress-nginx`, admits
+the ingress controller on the deploying app's port. Both halves of that
+design are individually reasonable and jointly wrong: the policy is
+namespace-wide, but its port list comes from whichever app is placed into
+the namespace first, and 409 tolerance means no later placement revises
+it.
+
+statecraft's in-pod two-stage fleet E2E (2026-07-23, the first run to
+place two apps on two different ports in one tenant namespace) hit the
+consequence: the first app (port 4000) pinned the namespace policy; the
+second (port 8080) rolled out Ready, because kubelet probes bypass
+NetworkPolicy, and served 502 from the edge. Green rollout, dead edge:
+the same silent-failure class the port-injection fix killed one layer up.
+
+0.2.0 makes the ingress allow per-app:
+
+- `network_policies()` now emits `fleet-allow-ingress-<app>`
+  (`naming::ingress_policy_name`) with a `podSelector` matching the app's
+  selector labels and a port list of exactly the app's port, carrying the
+  full per-app label set. The namespace-scoped `fleet-default-deny-all`
+  and `fleet-allow-egress` are unchanged: one shared pair per tenant
+  namespace.
+- Distinct names mean a second placement cannot 409 into the first app's
+  policy and inherit its port. Create-or-tolerate-409 stays correct for
+  the per-app policy because the port is immutable per app on the deploy
+  request contract (statecraft spec 006).
+- `removeApp` deletes the app's ingress allow with the app's other
+  per-app resources; the shared baseline pair still stays until a
+  last-app namespace GC exists.
+
+Migration: nothing deletes a pre-0.2.0 namespace-wide
+`fleet-allow-ingress-nginx`. NetworkPolicies are additive, so leaving it
+in place breaks nothing placed under 0.2.0, but it keeps admitting its
+frozen ports namespace-wide; the operator deletes it from a tenant
+namespace once no app placed under 0.1.0 remains there. In the live
+fleet that is one namespace, currently app-empty.
+
+The golden suite guarding acceptance item 1 grows from 12 to 13 tests
+with a two-apps-two-ports regression test; the resource shapes changed
+here, so per section 5's closing rule the next live E2E belongs to this
+amendment's consumer bump, not to the transfer record.
